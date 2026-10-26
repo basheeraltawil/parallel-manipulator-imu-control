@@ -1,4 +1,5 @@
 swxJRNL.swj
 *.err
 *.zip
+*.snapshot.*/
 ~$*
