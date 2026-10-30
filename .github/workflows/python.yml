@@ -1,0 +1,34 @@
+name: Python, model and firmware tests
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      - name: System libraries (headless OpenGL for MuJoCo/gmsh)
+        run: sudo apt-get update && sudo apt-get install -y libosmesa6 libglu1-mesa g++ make
+      - name: Python dependencies
+        run: pip install -r requirements.txt
+      - name: Core maths tests
+        run: python -m pytest -q ros2_ws/src/pm3rrr_core/test
+      - name: URDF tests (xacro without ROS)
+        run: PYTHONPATH=tools/cad_to_urdf/_ros_shim python -m pytest -q ros2_ws/src/pm3rrr_description/test
+      - name: URDF <-> kinematics validation (loop closure, inertia, meshes)
+        run: python tools/cad_to_urdf/step4_validate_urdf.py
+      - name: Firmware host tests (C++ IK vs Python)
+        run: make -C firmware/test
+      - name: Scenario KPIs (physics, no media)
+        env:
+          MUJOCO_GL: osmesa
+        run: python simulation/run_all.py --no-media

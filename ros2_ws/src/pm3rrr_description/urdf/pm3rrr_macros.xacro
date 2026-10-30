@@ -1,0 +1,134 @@
+<?xml version="1.0"?>
+<!-- Properties and macros shared by the pm3rrr description.
+     Every number is read from config/*.yaml (single source of truth). -->
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <!-- ===================== parameters from YAML ======================= -->
+  <xacro:property name="params" value="${xacro.load_yaml('$(find pm3rrr_description)/config/robot_params.yaml')['pm3rrr']}"/>
+  <xacro:property name="inertials" value="${xacro.load_yaml('$(find pm3rrr_description)/config/inertials.yaml')}"/>
+  <xacro:property name="geo" value="${params['geometry']}"/>
+  <xacro:property name="hts" value="${params['heights_mm']}"/>
+  <xacro:property name="srv" value="${params['servo']}"/>
+
+  <xacro:property name="mesh_dir" value="package://pm3rrr_description/meshes"/>
+  <xacro:property name="R_base" value="${geo['base_radius_mm'] / 1000.0}"/>
+  <xacro:property name="r_plat" value="${geo['platform_radius_mm'] / 1000.0}"/>
+  <xacro:property name="l1" value="${geo['proximal_link_mm'] / 1000.0}"/>
+  <xacro:property name="l2" value="${geo['distal_link_mm'] / 1000.0}"/>
+  <xacro:property name="z_motor" value="${hts['servo_horn_top'] / 1000.0}"/>
+  <xacro:property name="link_t" value="${hts['link_thickness'] / 1000.0}"/>
+  <xacro:property name="platform_t" value="${hts['platform_thickness'] / 1000.0}"/>
+  <xacro:property name="servo_limit" value="${radians(srv['limit_deg'])}"/>
+  <xacro:property name="servo_effort" value="${srv['stall_torque_nm']}"/>
+  <xacro:property name="servo_velocity" value="${srv['no_load_speed_rad_s']}"/>
+  <xacro:property name="motor_damping" value="0.002"/>
+  <xacro:property name="passive_damping" value="0.0005"/>
+
+  <!-- platform joint 1 in the platform frame (needed to place the platform) -->
+  <xacro:property name="c1x" value="${r_plat * cos(radians(geo['platform_angles_deg'][0]))}"/>
+  <xacro:property name="c1y" value="${r_plat * sin(radians(geo['platform_angles_deg'][0]))}"/>
+
+  <!-- ============================ materials =========================== -->
+  <material name="pm_base"><color rgba="0.20 0.22 0.25 1.0"/></material>
+  <material name="pm_servo"><color rgba="0.05 0.05 0.05 1.0"/></material>
+  <material name="pm_cradle"><color rgba="0.85 0.45 0.10 1.0"/></material>
+  <material name="pm_proximal"><color rgba="0.10 0.45 0.85 1.0"/></material>
+  <material name="pm_distal"><color rgba="0.95 0.95 0.95 1.0"/></material>
+  <material name="pm_platform"><color rgba="0.90 0.15 0.20 1.0"/></material>
+  <material name="pm_metal"><color rgba="0.70 0.70 0.72 1.0"/></material>
+
+  <!-- ============================ inertial ============================ -->
+  <xacro:macro name="inertial_from_yaml" params="name">
+    <xacro:property name="I" value="${inertials[name]}"/>
+    <inertial>
+      <origin xyz="${I['com'][0]} ${I['com'][1]} ${I['com'][2]}" rpy="0 0 0"/>
+      <mass value="${I['mass']}"/>
+      <inertia ixx="${I['ixx']}" ixy="${I['ixy']}" ixz="${I['ixz']}"
+               iyy="${I['iyy']}" iyz="${I['iyz']}" izz="${I['izz']}"/>
+    </inertial>
+  </xacro:macro>
+
+  <!-- ============================== leg =============================== -->
+  <!-- One RRR leg: fixed servo assembly, actuated motor joint (R), passive
+       elbow joint (R). The third R (platform joint) is leg1_platform_joint for
+       leg 1 and a loop-closure joint for legs 2 and 3. -->
+  <xacro:macro name="pm_leg" params="idx">
+    <xacro:property name="lam" value="${radians(geo['base_angles_deg'][idx-1])}"/>
+    <xacro:property name="bx" value="${R_base * cos(lam)}"/>
+    <xacro:property name="by" value="${R_base * sin(lam)}"/>
+    <xacro:property name="center" value="${radians(srv['center_deg'][idx-1])}"/>
+
+    <!-- servo + cradle, x-axis tangential (servo body beside the shaft) -->
+    <link name="leg${idx}_servo_link">
+      <visual>
+        <geometry><mesh filename="${mesh_dir}/visual/servo_cradle.stl"/></geometry>
+        <material name="pm_cradle"/>
+      </visual>
+      <visual>
+        <geometry><mesh filename="${mesh_dir}/visual/mg996r.stl"/></geometry>
+        <material name="pm_servo"/>
+      </visual>
+      <collision>
+        <geometry><mesh filename="${mesh_dir}/collision/mg996r.stl"/></geometry>
+      </collision>
+      <xacro:inertial_from_yaml name="servo_assembly"/>
+    </link>
+    <joint name="leg${idx}_servo_joint" type="fixed">
+      <parent link="base_link"/>
+      <child link="leg${idx}_servo_link"/>
+      <origin xyz="${bx} ${by} 0" rpy="0 0 ${lam + pi/2}"/>
+    </joint>
+
+    <!-- proximal link (on the servo horn): ACTUATED -->
+    <link name="leg${idx}_proximal_link">
+      <visual>
+        <geometry><mesh filename="${mesh_dir}/visual/proximal_link.stl"/></geometry>
+        <material name="pm_proximal"/>
+      </visual>
+      <visual>
+        <geometry><mesh filename="${mesh_dir}/visual/servo_horn.stl"/></geometry>
+        <material name="pm_distal"/>
+      </visual>
+      <collision>
+        <geometry><mesh filename="${mesh_dir}/collision/proximal_link.stl"/></geometry>
+      </collision>
+      <xacro:inertial_from_yaml name="proximal_link"/>
+    </link>
+    <!-- joint value 0 = servo centre (90 deg command); rpy yaw = servo mounting angle -->
+    <joint name="leg${idx}_motor_joint" type="revolute">
+      <parent link="base_link"/>
+      <child link="leg${idx}_proximal_link"/>
+      <origin xyz="${bx} ${by} ${z_motor}" rpy="0 0 ${center}"/>
+      <axis xyz="0 0 1"/>
+      <limit lower="${-servo_limit}" upper="${servo_limit}" effort="${servo_effort}" velocity="${servo_velocity}"/>
+      <dynamics damping="${motor_damping}" friction="0.0"/>
+    </joint>
+
+    <!-- distal link: PASSIVE -->
+    <link name="leg${idx}_distal_link">
+      <visual>
+        <geometry><mesh filename="${mesh_dir}/visual/distal_link.stl"/></geometry>
+        <material name="pm_distal"/>
+      </visual>
+      <visual>
+        <geometry><mesh filename="${mesh_dir}/visual/joint_pin.stl"/></geometry>
+        <material name="pm_metal"/>
+      </visual>
+      <collision>
+        <geometry><mesh filename="${mesh_dir}/collision/distal_link.stl"/></geometry>
+      </collision>
+      <xacro:inertial_from_yaml name="distal_link"/>
+    </link>
+    <joint name="leg${idx}_elbow_joint" type="revolute">
+      <parent link="leg${idx}_proximal_link"/>
+      <child link="leg${idx}_distal_link"/>
+      <!-- yaw = elbow angle at home -> joint value 0 = assembled home pose -->
+      <origin xyz="${l1} 0 ${link_t}" rpy="0 0 ${radians(geo['elbow_home_deg'])}"/>
+      <axis xyz="0 0 1"/>
+      <!-- keep the elbow bent: straight (psi=0) or folded (psi=180) is a serial singularity -->
+      <limit lower="${radians(5.0 - geo['elbow_home_deg'])}" upper="${radians(175.0 - geo['elbow_home_deg'])}" effort="0" velocity="20"/>
+      <dynamics damping="${passive_damping}" friction="0.0"/>
+    </joint>
+  </xacro:macro>
+
+</robot>

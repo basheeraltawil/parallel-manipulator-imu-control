@@ -1,0 +1,49 @@
+name: ROS 2 Humble build and test
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  colcon:
+    runs-on: ubuntu-22.04
+    container: ros:humble
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install dependencies (rosdep)
+        run: |
+          apt-get update
+          rosdep update
+          rosdep install --from-paths ros2_ws/src --ignore-src -y --rosdistro humble
+      - name: Build
+        working-directory: ros2_ws
+        run: |
+          source /opt/ros/humble/setup.bash
+          colcon build --event-handlers console_direct+
+      - name: Test
+        working-directory: ros2_ws
+        run: |
+          source /opt/ros/humble/setup.bash
+          source install/setup.bash
+          colcon test --event-handlers console_direct+
+          colcon test-result --verbose
+      - name: Smoke test - expand the URDF and check it
+        working-directory: ros2_ws
+        run: |
+          source install/setup.bash
+          xacro src/pm3rrr_description/urdf/pm3rrr.urdf.xacro use_gazebo:=true use_ros2_control:=true > /tmp/pm3rrr.urdf
+          check_urdf /tmp/pm3rrr.urdf
+      - name: Smoke test - kinematic simulation runs (controller + scenario, 8 s)
+        working-directory: ros2_ws
+        run: |
+          source install/setup.bash
+          timeout 8 ros2 launch pm3rrr_bringup sim_rviz.launch.py rviz:=false scenario:=microplate > /tmp/launch.log 2>&1 || true
+          cat /tmp/launch.log
+          grep -q "pm3rrr_controller ready" /tmp/launch.log
+          ! grep -q "Traceback" /tmp/launch.log

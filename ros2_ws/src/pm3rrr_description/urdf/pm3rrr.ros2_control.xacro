@@ -1,0 +1,40 @@
+<?xml version="1.0"?>
+<!-- ros2_control description.
+     Motors: EFFORT command + PID in the joint_trajectory_controller. This
+     mimics a hobby servo (an internal position loop driving a DC motor) and,
+     unlike position "teleporting", keeps Gazebo's closed kinematic loops valid.
+     Passive joints are state-only so joint_state_broadcaster publishes them
+     and robot_state_publisher can draw the whole tree. -->
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+  <xacro:macro name="pm_ros2_control">
+    <ros2_control name="pm3rrr_system" type="system">
+      <hardware>
+        <plugin>gazebo_ros2_control/GazeboSystem</plugin>
+      </hardware>
+      <xacro:macro name="motor" params="idx">
+        <joint name="leg${idx}_motor_joint">
+          <command_interface name="effort">
+            <param name="min">${-servo_effort}</param>
+            <param name="max">${servo_effort}</param>
+          </command_interface>
+          <state_interface name="position"><param name="initial_value">0.0</param></state_interface>
+          <state_interface name="velocity"/>
+          <state_interface name="effort"/>
+        </joint>
+      </xacro:macro>
+      <xacro:macro name="passive" params="name">
+        <joint name="${name}">
+          <state_interface name="position"/>
+          <state_interface name="velocity"/>
+        </joint>
+      </xacro:macro>
+      <xacro:motor idx="1"/>
+      <xacro:motor idx="2"/>
+      <xacro:motor idx="3"/>
+      <xacro:passive name="leg1_elbow_joint"/>
+      <xacro:passive name="leg2_elbow_joint"/>
+      <xacro:passive name="leg3_elbow_joint"/>
+      <xacro:passive name="leg1_platform_joint"/>
+    </ros2_control>
+  </xacro:macro>
+</robot>

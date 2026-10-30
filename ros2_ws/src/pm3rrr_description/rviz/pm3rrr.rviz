@@ -1,0 +1,92 @@
+Panels:
+  - Class: rviz_common/Displays
+    Name: Displays
+  - Class: rviz_common/Views
+    Name: Views
+Visualization Manager:
+  Class: ""
+  Displays:
+    - Class: rviz_default_plugins/Grid
+      Name: Grid
+      Enabled: true
+      Cell Size: 0.01
+      Plane Cell Count: 40
+      Color: 160; 160; 164
+      Alpha: 0.4
+      Reference Frame: <Fixed Frame>
+    - Class: rviz_default_plugins/RobotModel
+      Name: RobotModel
+      Enabled: true
+      Description Source: Topic
+      Description Topic:
+        Value: /robot_description
+        Depth: 5
+        Durability Policy: Transient Local
+        Reliability Policy: Reliable
+      Visual Enabled: true
+      Collision Enabled: false
+      Alpha: 1
+    - Class: rviz_default_plugins/TF
+      Name: TF
+      Enabled: false
+      Marker Scale: 0.05
+      Show Names: false
+    - Class: rviz_default_plugins/MarkerArray
+      Name: Workspace, trail and target
+      Enabled: true
+      Topic:
+        Value: /pm3rrr/markers
+        Depth: 5
+        Durability Policy: Volatile
+        Reliability Policy: Reliable
+    - Class: rviz_default_plugins/Pose
+      Name: Commanded pose
+      Enabled: true
+      Topic:
+        Value: /pm3rrr/commanded_pose
+        Depth: 5
+        Durability Policy: Volatile
+        Reliability Policy: Reliable
+      Shape: Axes
+      Axes Length: 0.02
+      Axes Radius: 0.001
+    - Class: rviz_default_plugins/Pose
+      Name: Measured pose (FK)
+      Enabled: true
+      Topic:
+        Value: /pm3rrr/measured_pose
+        Depth: 5
+        Durability Policy: Volatile
+        Reliability Policy: Reliable
+      Shape: Arrow
+      Color: 255; 25; 0
+      Shaft Length: 0.02
+      Shaft Radius: 0.001
+      Head Length: 0.006
+      Head Radius: 0.003
+  Enabled: true
+  Global Options:
+    Background Color: 238; 241; 245
+    Fixed Frame: world
+    Frame Rate: 30
+  Name: root
+  Tools:
+    - Class: rviz_default_plugins/MoveCamera
+    - Class: rviz_default_plugins/Select
+    - Class: rviz_default_plugins/Measure
+  Views:
+    Current:
+      Class: rviz_default_plugins/Orbit
+      Name: Current View
+      Distance: 0.45
+      Focal Point:
+        X: 0
+        Y: 0
+        Z: 0.08
+      Pitch: 0.75
+      Yaw: 2.3
+      Target Frame: <Fixed Frame>
+    Saved: ~
+Window Geometry:
+  Width: 1280
+  Height: 800

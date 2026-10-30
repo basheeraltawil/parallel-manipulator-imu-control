@@ -1,0 +1,58 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "permissions": {
+    "allow": [
+      "Bash(python3 -m pytest:*)",
+      "Bash(python3 tools/cad_to_urdf/step4_validate_urdf.py:*)",
+      "Bash(python3 simulation/run_all.py --no-media)",
+      "Bash(python3 analysis/generate_figures.py:*)",
+      "Bash(make -C firmware/test:*)",
+      "Bash(colcon build:*)",
+      "Bash(colcon test:*)",
+      "Bash(colcon test-result:*)",
+      "Bash(xacro:*)",
+      "Bash(check_urdf:*)",
+      "Bash(ros2 topic:*)",
+      "Bash(ros2 node:*)",
+      "Bash(git status)",
+      "Bash(git diff:*)",
+      "Bash(git log:*)"
+    ],
+    "ask": [
+      "Bash(arduino-cli upload:*)",
+      "Bash(git push:*)",
+      "Bash(python3 tools/cad_to_urdf/step2_build_meshes.py)",
+      "Bash(python3 tools/cad_to_urdf/step3_generate_srdf.py:*)"
+    ],
+    "deny": [
+      "Read(./.env)",
+      "Read(./**/*.pem)",
+      "Bash(rm -rf /*)",
+      "Bash(git push --force:*)",
+      "Edit(./legacy/**)",
+      "Write(./legacy/**)"
+    ]
+  },
+  "env": {
+    "MUJOCO_GL": "osmesa",
+    "PYTHONDONTWRITEBYTECODE": "1"
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          { "type": "command", "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/validate-bash.sh" }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write|MultiEdit",
+        "hooks": [
+          { "type": "command", "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/post-edit-check.sh" }
+        ]
+      }
+    ]
+  }
+}

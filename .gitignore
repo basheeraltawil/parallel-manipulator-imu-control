@@ -1,5 +1,28 @@
+# CAD temporary files
 swxJRNL.swj
 *.err
-*.zip
-*.snapshot.*/
 ~$*
+*.zip
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.venv/
+
+# ROS 2 workspace
+ros2_ws/build/
+ros2_ws/install/
+ros2_ws/log/
+
+# Firmware host test artefacts
+firmware/test/test_host
+firmware/test/expected_ik.csv
+
+# Generated reports
+tools/cad_to_urdf/parts_report.yaml
+
+# Claude Code personal overrides (keep the committed templates, ignore real copies)
+.claude/settings.local.json.bak
+CLAUDE.local.md.bak

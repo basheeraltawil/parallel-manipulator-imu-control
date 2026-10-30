@@ -1,0 +1,23 @@
+# Parameters of the pm3rrr nodes (loaded by the bringup launch files)
+pm3rrr_controller:
+  ros__parameters:
+    rate_hz: 50.0
+    max_linear_speed: 0.05     # m/s
+    max_angular_speed: 1.0     # rad/s
+    kappa_max: 10.0            # singularity guard threshold (condition number)
+    trajectory_lookahead: 0.06 # s, gazebo mode
+
+pm3rrr_imu_teleop:
+  ros__parameters:
+    calibration_time: 1.0
+    filter_tau: 0.4
+    max_tilt_deg: 25.0
+    deadband_deg: 3.0
+    expo: 0.35
+    reach: 0.016
+    max_speed: 0.05
+
+pm3rrr_serial_bridge:
+  ros__parameters:
+    port: /dev/ttyUSB0
+    baud: 115200
