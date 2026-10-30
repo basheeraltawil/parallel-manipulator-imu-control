@@ -1,0 +1,12 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "permissions": {
+    "allow": [
+      "Bash(ros2 launch pm3rrr_bringup sim_rviz.launch.py:*)",
+      "Bash(ros2 launch pm3rrr_bringup sim_gazebo.launch.py:*)"
+    ]
+  },
+  "env": {
+    "PM3RRR_SERIAL_PORT": "/dev/ttyUSB0"
+  }
+}

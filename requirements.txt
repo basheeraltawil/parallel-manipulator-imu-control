@@ -1,0 +1,16 @@
+# Desktop simulation, analysis and CAD pipeline (no ROS needed)
+numpy>=1.21
+scipy>=1.8
+matplotlib>=3.5
+pyyaml>=5.4
+pytest>=7
+mujoco>=3.1          # physics simulation of the URDF (simulation/)
+imageio>=2.20        # GIF/MP4 helpers
+pillow>=9
+trimesh>=4           # CAD pipeline: meshes, mass properties (tools/cad_to_urdf)
+networkx>=2.8        # trimesh path utilities
+shapely>=2.0
+python-fcl>=0.7      # collision checking for the SRDF step
+gmsh>=4.11           # STEP -> mesh for vendor parts (only if the cached STL is missing)
+yourdfpy>=0.0.56     # URDF parsing / forward kinematics in the validator
+xacro>=2.0           # xacro outside ROS (ROS 2 provides its own)

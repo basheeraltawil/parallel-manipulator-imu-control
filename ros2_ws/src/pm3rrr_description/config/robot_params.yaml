@@ -1,0 +1,28 @@
+# Single source of truth for the robot geometry (measured from the CAD/STL parts).
+# Used by: the URDF xacro (xacro.load_yaml), the Python core library
+# (RobotParams.from_yaml) and checked by pm3rrr_core/test/test_kinematics.py.
+pm3rrr:
+  geometry:
+    base_radius_mm: 87.5          # base.STL: servo bores on a 175 mm circle
+    platform_radius_mm: 26.0      # end_effector.STL: bearing seats on a 52 mm circle
+    proximal_link_mm: 50.0        # connecting_bar.STL hole-to-hole
+    distal_link_mm: 50.0          # middle_bar.STL hole-to-hole
+    base_angles_deg: [-30.0, 90.0, 210.0]
+    platform_angles_deg: [30.0, 150.0, 270.0]   # +60 deg from the base pivots (original design)
+    working_modes: [-1, -1, -1]   # theta = beta - alpha  (elbow branch used by the original code)
+    # Passive-joint angles at the home pose (x=y=phi=0). The URDF puts them in the
+    # joint origins so that ALL joints = 0 is the assembled home pose (Gazebo spawns
+    # assembled). Checked against the IK by pm3rrr_core/test/test_kinematics.py.
+    elbow_home_deg: 77.792661
+    platform1_home_deg: -172.079568
+  heights_mm:                     # vertical stack-up of the assembly (z)
+    base_plate: 8.0
+    servo_horn_top: 80.8          # plate 8 + cradle 45 + servo above flange 22.6 + horn 5.2
+    link_thickness: 8.0
+    platform_thickness: 7.0
+  servo:                          # TowerPro MG996R
+    center_deg: [94.286907, -145.713093, -25.713093]   # world angle of the motor link at a 90 deg command
+    direction: [1, 1, 1]
+    limit_deg: 85.0
+    stall_torque_nm: 1.08
+    no_load_speed_rad_s: 7.0

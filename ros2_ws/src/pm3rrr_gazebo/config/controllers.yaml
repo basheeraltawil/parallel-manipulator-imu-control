@@ -1,0 +1,32 @@
+# ros2_control controllers for Gazebo Classic (gazebo_ros2_control)
+controller_manager:
+  ros__parameters:
+    update_rate: 500  # Hz
+
+    joint_state_broadcaster:
+      type: joint_state_broadcaster/JointStateBroadcaster
+
+    joint_trajectory_controller:
+      type: joint_trajectory_controller/JointTrajectoryController
+
+joint_trajectory_controller:
+  ros__parameters:
+    joints:
+      - leg1_motor_joint
+      - leg2_motor_joint
+      - leg3_motor_joint
+    command_interfaces:
+      - effort
+    state_interfaces:
+      - position
+      - velocity
+    # PD gains emulate the hobby servo's internal position loop
+    gains:
+      leg1_motor_joint: {p: 2.0, i: 0.0, d: 0.03, i_clamp: 0.0}
+      leg2_motor_joint: {p: 2.0, i: 0.0, d: 0.03, i_clamp: 0.0}
+      leg3_motor_joint: {p: 2.0, i: 0.0, d: 0.03, i_clamp: 0.0}
+    allow_partial_joints_goal: false
+    open_loop_control: false
+    constraints:
+      stopped_velocity_tolerance: 0.05
+      goal_time: 0.0

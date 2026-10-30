@@ -1,0 +1,76 @@
+<?xml version="1.0"?>
+<!-- Gazebo (Classic 11, ODE) extensions.
+     1. Loop-closure joints: a <gazebo> block WITHOUT a reference is copied
+        verbatim into the generated SDF <model>, so we can add the two joints
+        URDF cannot express. Joint pose is expressed in the CHILD link frame
+        (platform_link, origin at C1): position of C_i is c_i - c_1.
+     2. gazebo_ros2_control plugin + controllers file.
+     3. MPU6050-like IMU on the platform.
+     4. Colours (Gazebo ignores URDF <material>). -->
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+  <xacro:macro name="pm_gazebo">
+
+    <xacro:macro name="loop_closure" params="idx">
+      <xacro:property name="g" value="${radians(geo['platform_angles_deg'][idx-1])}"/>
+      <gazebo>
+        <joint name="leg${idx}_platform_joint" type="revolute">
+          <parent>leg${idx}_distal_link</parent>
+          <child>platform_link</child>
+          <pose>${r_plat*cos(g) - c1x} ${r_plat*sin(g) - c1y} 0 0 0 0</pose>
+          <axis>
+            <xyz>0 0 1</xyz>
+            <dynamics><damping>${passive_damping}</damping></dynamics>
+          </axis>
+        </joint>
+      </gazebo>
+    </xacro:macro>
+    <xacro:loop_closure idx="2"/>
+    <xacro:loop_closure idx="3"/>
+
+    <gazebo>
+      <plugin filename="libgazebo_ros2_control.so" name="gazebo_ros2_control">
+        <parameters>$(find pm3rrr_gazebo)/config/controllers.yaml</parameters>
+      </plugin>
+    </gazebo>
+
+    <gazebo reference="platform_link">
+      <material>Gazebo/Red</material>
+      <sensor name="platform_imu" type="imu">
+        <always_on>true</always_on>
+        <update_rate>100</update_rate>
+        <pose>${-c1x} ${-c1y} ${platform_t + 0.002} 0 0 0</pose>
+        <imu>
+          <angular_velocity>
+            <x><noise type="gaussian"><mean>0</mean><stddev>8.7e-4</stddev><bias_mean>0.0087</bias_mean></noise></x>
+            <y><noise type="gaussian"><mean>0</mean><stddev>8.7e-4</stddev><bias_mean>0.0087</bias_mean></noise></y>
+            <z><noise type="gaussian"><mean>0</mean><stddev>8.7e-4</stddev><bias_mean>0.0087</bias_mean></noise></z>
+          </angular_velocity>
+          <linear_acceleration>
+            <x><noise type="gaussian"><mean>0</mean><stddev>0.039</stddev><bias_mean>0.05</bias_mean></noise></x>
+            <y><noise type="gaussian"><mean>0</mean><stddev>0.039</stddev><bias_mean>0.05</bias_mean></noise></y>
+            <z><noise type="gaussian"><mean>0</mean><stddev>0.039</stddev><bias_mean>0.05</bias_mean></noise></z>
+          </linear_acceleration>
+        </imu>
+        <plugin name="platform_imu_plugin" filename="libgazebo_ros_imu_sensor.so">
+          <ros>
+            <namespace>/platform</namespace>
+            <remapping>~/out:=imu</remapping>
+          </ros>
+          <initial_orientation_as_reference>false</initial_orientation_as_reference>
+          <frame_name>imu_link</frame_name>
+        </plugin>
+      </sensor>
+    </gazebo>
+
+    <gazebo reference="base_link"><material>Gazebo/DarkGrey</material></gazebo>
+    <xacro:macro name="leg_colours" params="idx">
+      <gazebo reference="leg${idx}_servo_link"><material>Gazebo/Orange</material></gazebo>
+      <gazebo reference="leg${idx}_proximal_link"><material>Gazebo/Blue</material></gazebo>
+      <gazebo reference="leg${idx}_distal_link"><material>Gazebo/White</material></gazebo>
+    </xacro:macro>
+    <xacro:leg_colours idx="1"/>
+    <xacro:leg_colours idx="2"/>
+    <xacro:leg_colours idx="3"/>
+
+  </xacro:macro>
+</robot>
